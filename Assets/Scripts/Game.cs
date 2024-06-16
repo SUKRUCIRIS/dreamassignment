@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using TMPro;
 using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
@@ -51,9 +52,9 @@ public class gameobj
         rectTransform.localPosition = position + new Vector2(-960, -1706.6665f);
     }
 
-    private IEnumerator MoveObjectCoroutine(Vector2 targetPosition, float duration)
+    private IEnumerator MoveObjectCoroutine(Vector2 endposition, float duration)
     {
-        Vector3 startPosition = obj.transform.position;
+        Vector2 startPosition = new Vector2(obj.transform.localPosition.x, obj.transform.localPosition.y);
         float elapsedTime = 0f;
 
         while (elapsedTime < duration)
@@ -62,14 +63,14 @@ public class gameobj
             {
                 yield break;
             }
-            obj.transform.position = Vector2.Lerp(startPosition, targetPosition, elapsedTime / duration);
+            obj.transform.localPosition = Vector2.Lerp(startPosition, endposition + new Vector2(-960, -1706.6665f), elapsedTime / duration);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
         if (obj != null)
         {
-            obj.transform.position = targetPosition;
+            obj.transform.localPosition = endposition + new Vector2(-960, -1706.6665f);
         }
     }
 
@@ -87,13 +88,13 @@ public class gameobj
         }
     }
 
-    public void Move(Vector2 targetPosition, float duration)
+    public void Move(Vector2 endposition, float duration)
     {
         if (currco != null)
         {
             CoroutineRunner.instance.StopCoroutine(currco);
         }
-        currco = CoroutineRunner.instance.StartCoroutine(MoveObjectCoroutine(targetPosition, duration));
+        currco = CoroutineRunner.instance.StartCoroutine(MoveObjectCoroutine(endposition, duration));
     }
 
     public void Destroy()
@@ -123,7 +124,7 @@ public class gridobj
         CUBE
     }
     public GRID_TYPE gridtype;
-    public gridobj(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, GRID_TYPE _gridtype, List<List<gridobj>> gamemap)
+    public gridobj(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, GRID_TYPE _gridtype, Game gamevars)
     {
         this.column = column;
         this.row = row;
@@ -133,7 +134,7 @@ public class gridobj
         EventTrigger trigger = gobj.obj.AddComponent<EventTrigger>();
         EventTrigger.Entry entry = new EventTrigger.Entry();
         entry.eventID = EventTriggerType.PointerClick;
-        entry.callback.AddListener((eventData) => { tap(gamemap); });
+        entry.callback.AddListener((eventData) => { tap(gamevars); });
         trigger.triggers.Add(entry);
     }
     public void Destroy()
@@ -150,7 +151,7 @@ public class gridobj
         this.row = targetrow;
         this.gobj.Move(new Vector2(gridstartx + gridwidth * column, gridstarty - (gridwidth * scaleh) * row), duration);
     }
-    public virtual void tap(List<List<gridobj>> gamemap)
+    public virtual void tap(Game gamevars)
     {
     }
 }
@@ -168,8 +169,8 @@ public class obstacle : gridobj
     }
     public OBSTACLE_TYPE obstacletype;
     public obstacle(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, int health, bool blastcandamage,
-        bool tntcandamage, bool canfall, OBSTACLE_TYPE _obstacletype, List<List<gridobj>> gamemap)
-        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, GRID_TYPE.OBSTACLE, gamemap)
+        bool tntcandamage, bool canfall, OBSTACLE_TYPE _obstacletype, Game gamevars)
+        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, GRID_TYPE.OBSTACLE, gamevars)
     {
         this.health = health;
         this.blastcandamage = blastcandamage;
@@ -180,30 +181,34 @@ public class obstacle : gridobj
 }
 public class stone : obstacle
 {
-    public stone(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, List<List<gridobj>> gamemap)
-        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, 1, false, true, false, OBSTACLE_TYPE.STONE, gamemap)
+    public stone(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, Game gamevars)
+        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, 1, false, true, false, OBSTACLE_TYPE.STONE, gamevars)
     {
     }
 }
 public class box : obstacle
 {
-    public box(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, List<List<gridobj>> gamemap)
-        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, 1, true, true, false, OBSTACLE_TYPE.BOX, gamemap)
+    public box(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, Game gamevars)
+        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, 1, true, true, false, OBSTACLE_TYPE.BOX, gamevars)
     {
     }
 }
 public class vase : obstacle
 {
-    public vase(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, List<List<gridobj>> gamemap)
-        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, 2, true, true, true, OBSTACLE_TYPE.VASE, gamemap)
+    public vase(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, Game gamevars)
+        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, 2, true, true, true, OBSTACLE_TYPE.VASE, gamevars)
     {
     }
 }
 public class tnt : gridobj
 {
-    public tnt(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, List<List<gridobj>> gamemap)
-        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, GRID_TYPE.TNT, gamemap)
+    public tnt(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, Game gamevars)
+        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, GRID_TYPE.TNT, gamevars)
     {
+    }
+    public override void tap(Game gamevars)
+    {
+
     }
 }
 public class cube : gridobj
@@ -217,31 +222,279 @@ public class cube : gridobj
     };
     public bool tntstate;
     public CUBE_TYPE cubetype;
-    public cube(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, CUBE_TYPE _cubetype, List<List<gridobj>> gamemap)
-        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, GRID_TYPE.CUBE, gamemap)
+    public cube(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, CUBE_TYPE _cubetype, Game gamevars)
+        : base(column, row, gridstartx, gridstarty, gridwidth, canvas, sprite, GRID_TYPE.CUBE, gamevars)
     {
         this.tntstate = false;
         this.cubetype = _cubetype;
+    }
+    public override void tap(Game gamevars)
+    {
+        List<cube> blastcubes = new List<cube>();
+        blastcubes.Add(this);
+        recursivecontrol(blastcubes, gamevars);
+        if (blastcubes.Count >= 2)
+        {
+            gamevars.currmovecount--;
+            for (int i = 0; i < blastcubes.Count; i++)
+            {
+                gamevars.deletegridobj(blastcubes[i].column, blastcubes[i].row);
+            }
+            if (blastcubes.Count >= 5)
+            {
+                gamevars.addtnt(this.column, this.row);
+            }
+            gamevars.updatemovecount();
+        }
+        gamevars.updatemap();
+    }
+    private void recursivecontrol(List<cube> blastcubes, Game gamevars)
+    {
+        void recursivecalculate(int searchcolumn, int searchrow)
+        {
+            gridobj xgrid = gamevars.getgridobj(searchcolumn, searchrow);
+            if (xgrid != null && xgrid.gridtype == gridobj.GRID_TYPE.CUBE)
+            {
+                cube xcube = (cube)xgrid;
+                if (blastcubes.Last().cubetype == xcube.cubetype && !blastcubes.Contains(xcube))
+                {
+                    blastcubes.Add(xcube);
+                    recursivecontrol(blastcubes, gamevars);
+                }
+            }
+        }
+        int currentcolumn = blastcubes.Last().column;
+        int currentrow = blastcubes.Last().row;
+        recursivecalculate(currentcolumn - 1, currentrow);
+        recursivecalculate(currentcolumn + 1, currentrow);
+        recursivecalculate(currentcolumn, currentrow - 1);
+        recursivecalculate(currentcolumn, currentrow + 1);
+    }
+    public List<cube> tntgroup(Game gamevars)
+    {
+        List<cube> blastcubes = new List<cube>();
+        blastcubes.Add(this);
+        recursivecontrol(blastcubes, gamevars);
+        if (blastcubes.Count >= 5)
+        {
+            return blastcubes;
+        }
+        return null;
     }
 }
 
 public class Game : MonoBehaviour
 {
-    private const float gridwidth = 160;
-    private float gridstartx = 0;
-    private float gridstarty = 0;
-    private int currmovecount = 40;
-    private Canvas canvas;
-    private Sprite tntsprite;
-    private Sprite blockred, blockgreen, blockblue,
+    public const float gridwidth = 160;
+    public float gridstartx = 0;
+    public float gridstarty = 0;
+    public int currmovecount = 40;
+    public Canvas canvas;
+    public Sprite tntsprite;
+    public Sprite blockred, blockgreen, blockblue,
         blockyellow, blockredtnt, blockgreentnt, blockbluetnt, blockyellowtnt;
-    private Sprite vase1sprite, vase2sprite, stonesprite, boxsprite;
-    private level currentlevel;
-    private List<List<gridobj>> gamemap = new List<List<gridobj>>();
-    private List<gameobj> goals = new List<gameobj>();
-    private int levelgoalstone = 0, levelgoalvase = 0, levelgoalbox = 0, levelgoaltype = 0;
-    private int currentgoalstone = 0, currentgoalvase = 0, currentgoalbox = 0;
+    public Sprite vase1sprite, vase2sprite, stonesprite, boxsprite;
+    public level currentlevel;
+    public List<gridobj> gamemap = new List<gridobj>();
+    public List<List<bool>> emptymap = new List<List<bool>>();
+    public List<gameobj> goals = new List<gameobj>();
+    public int levelgoalstone = 0, levelgoalvase = 0, levelgoalbox = 0, levelgoaltype = 0;
+    public int currentgoalstone = 0, currentgoalvase = 0, currentgoalbox = 0;
 
+    public bool existemptygrid()
+    {
+        for (int i = 0; i < emptymap.Count; i++)
+        {
+            for (int j = 0; j < emptymap[i].Count; j++)
+            {
+                if (emptymap[i][j])
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    public void updatemap()
+    {
+        while (existemptygrid())
+        {
+            for (int i = 0; i < gamemap.Count; i++)
+            {
+                if (gamemap[i].gridtype != gridobj.GRID_TYPE.OBSTACLE || ((obstacle)gamemap[i]).obstacletype == obstacle.OBSTACLE_TYPE.VASE)
+                {
+                    while (gamemap[i].row + 1 < currentlevel.grid_height && emptymap[gamemap[i].row + 1][gamemap[i].column])
+                    {
+                        gamemap[i].move(gamemap[i].column, gamemap[i].row + 1, 0.5f, gridstartx, gridstarty, gridwidth);
+                        emptymap[gamemap[i].row][gamemap[i].column] = false;
+                        if (gamemap[i].row - 1 >= 0)
+                        {
+                            emptymap[gamemap[i].row - 1][gamemap[i].column] = true;
+                        }
+                    }
+                }
+            }
+            for (int i = 0; i < emptymap[0].Count; i++)
+            {
+                if (emptymap[0][i])
+                {
+                    addrandcube(i, -1);
+                    gamemap.Last().move(i, 0, 0.5f, gridstartx, gridstarty, gridwidth);
+                    emptymap[0][i] = false;
+                }
+            }
+        }
+        List<List<cube>> tntgroups = new List<List<cube>>();
+        for (int i = 0; i < gamemap.Count; i++)
+        {
+            if (gamemap[i].gridtype == gridobj.GRID_TYPE.CUBE)
+            {
+                cube cubex = (cube)gamemap[i];
+                var group = cubex.tntgroup(this);
+                if (group != null)
+                {
+                    bool found = false;
+                    foreach (var c in tntgroups)
+                    {
+                        if (c.Contains(group[0]))
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        tntgroups.Add(group);
+                    }
+                }
+            }
+        }
+        for (int i = 0; i < gamemap.Count; i++)
+        {
+            if (gamemap[i].gridtype == gridobj.GRID_TYPE.CUBE)
+            {
+                cube cubex = (cube)gamemap[i];
+                cubex.tntstate = false;
+                foreach (var c in tntgroups)
+                {
+                    if (c.Contains(cubex))
+                    {
+                        cubex.tntstate = true;
+                    }
+                }
+                if (cubex.tntstate)
+                {
+                    if (cubex.cubetype == cube.CUBE_TYPE.BLUE)
+                    {
+                        cubex.gobj.ChangeSprite(blockbluetnt);
+                    }
+                    else if (cubex.cubetype == cube.CUBE_TYPE.RED)
+                    {
+                        cubex.gobj.ChangeSprite(blockredtnt);
+                    }
+                    else if (cubex.cubetype == cube.CUBE_TYPE.GREEN)
+                    {
+                        cubex.gobj.ChangeSprite(blockgreentnt);
+                    }
+                    else if (cubex.cubetype == cube.CUBE_TYPE.YELLOW)
+                    {
+                        cubex.gobj.ChangeSprite(blockyellowtnt);
+                    }
+                    UnityEngine.Color imagecolor = cubex.gobj.obj.GetComponent<UnityEngine.UI.Image>().color;
+                    imagecolor.r = 1;
+                    imagecolor.g = 1;
+                    imagecolor.b = 1;
+                    cubex.gobj.obj.GetComponent<UnityEngine.UI.Image>().color = imagecolor;
+                }
+                else
+                {
+                    if (cubex.cubetype == cube.CUBE_TYPE.BLUE)
+                    {
+                        cubex.gobj.ChangeSprite(blockblue);
+                    }
+                    else if (cubex.cubetype == cube.CUBE_TYPE.RED)
+                    {
+                        cubex.gobj.ChangeSprite(blockred);
+                    }
+                    else if (cubex.cubetype == cube.CUBE_TYPE.GREEN)
+                    {
+                        cubex.gobj.ChangeSprite(blockgreen);
+                    }
+                    else if (cubex.cubetype == cube.CUBE_TYPE.YELLOW)
+                    {
+                        cubex.gobj.ChangeSprite(blockyellow);
+                    }
+                    UnityEngine.Color imagecolor = cubex.gobj.obj.GetComponent<UnityEngine.UI.Image>().color;
+                    if (tntgroups.Count > 0)
+                    {
+                        imagecolor.r = 0.7f;
+                        imagecolor.g = 0.7f;
+                        imagecolor.b = 0.7f;
+                    }
+                    else
+                    {
+                        imagecolor.r = 1;
+                        imagecolor.g = 1;
+                        imagecolor.b = 1;
+                    }
+                    cubex.gobj.obj.GetComponent<UnityEngine.UI.Image>().color = imagecolor;
+                }
+            }
+        }
+    }
+    public void updatemovecount()
+    {
+        GameObject movecounttext = GameObject.FindWithTag("movecount");
+        TextMeshProUGUI tmp = movecounttext.GetComponent<TextMeshProUGUI>();
+        tmp.text = currmovecount.ToString();
+    }
+    public void addrandcube(int column, int row)
+    {
+        int r = Random.Range(0, 4);
+        if (r == 0)
+        {
+            gamemap.Add(new cube(column, row, gridstartx, gridstarty, gridwidth, canvas, blockred, cube.CUBE_TYPE.RED, this));
+        }
+        else if (r == 1)
+        {
+            gamemap.Add(new cube(column, row, gridstartx, gridstarty, gridwidth, canvas, blockgreen, cube.CUBE_TYPE.GREEN, this));
+        }
+        else if (r == 2)
+        {
+            gamemap.Add(new cube(column, row, gridstartx, gridstarty, gridwidth, canvas, blockblue, cube.CUBE_TYPE.BLUE, this));
+        }
+        else if (r == 3)
+        {
+            gamemap.Add(new cube(column, row, gridstartx, gridstarty, gridwidth, canvas, blockyellow, cube.CUBE_TYPE.YELLOW, this));
+        }
+    }
+    public void addtnt(int column, int row)
+    {
+        gamemap.Add(new tnt(column, row, gridstartx, gridstarty, gridwidth, canvas, tntsprite, this));
+        emptymap[row][column] = false;
+    }
+    public gridobj getgridobj(int column, int row)
+    {
+        for (int i = 0; i < gamemap.Count; i++)
+        {
+            if (gamemap[i].row == row && gamemap[i].column == column) { return gamemap[i]; }
+        }
+        return null;
+    }
+    public void deletegridobj(int column, int row)
+    {
+        for (int i = 0; i < gamemap.Count; i++)
+        {
+            if (gamemap[i].row == row && gamemap[i].column == column)
+            {
+                gamemap[i].Destroy();
+                gamemap[i] = null;
+                gamemap.RemoveAt(i);
+                emptymap[row][column] = true;
+                break;
+            }
+        }
+    }
     static Sprite loadsprite(string path)
     {
         Texture2D texture = Resources.Load<Texture2D>(path);
@@ -327,67 +580,68 @@ public class Game : MonoBehaviour
 
         for (int row = currentlevel.grid_height - 1; row >= 0; row--)
         {
-            gamemap.Add(new List<gridobj>());
+            emptymap.Add(new List<bool>());
         }
         for (int row = currentlevel.grid_height - 1; row >= 0; row--)
         {
             for (int col = 0; col < currentlevel.grid_width; col++)
             {
                 int arrindex = (currentlevel.grid_width * currentlevel.grid_height - 1) - (row * currentlevel.grid_width + col);
+                emptymap[row].Add(false);
                 if (currentlevel.grid[arrindex] == "r")
                 {
-                    gamemap[row].Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockred, cube.CUBE_TYPE.RED, gamemap));
+                    gamemap.Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockred, cube.CUBE_TYPE.RED, this));
                 }
                 else if (currentlevel.grid[arrindex] == "g")
                 {
-                    gamemap[row].Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockgreen, cube.CUBE_TYPE.GREEN, gamemap));
+                    gamemap.Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockgreen, cube.CUBE_TYPE.GREEN, this));
                 }
                 else if (currentlevel.grid[arrindex] == "b")
                 {
-                    gamemap[row].Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockblue, cube.CUBE_TYPE.BLUE, gamemap));
+                    gamemap.Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockblue, cube.CUBE_TYPE.BLUE, this));
                 }
                 else if (currentlevel.grid[arrindex] == "y")
                 {
-                    gamemap[row].Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockyellow, cube.CUBE_TYPE.YELLOW, gamemap));
+                    gamemap.Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockyellow, cube.CUBE_TYPE.YELLOW, this));
                 }
                 else if (currentlevel.grid[arrindex] == "rand")
                 {
                     int r = Random.Range(0, 4);
                     if (r == 0)
                     {
-                        gamemap[row].Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockred, cube.CUBE_TYPE.RED, gamemap));
+                        gamemap.Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockred, cube.CUBE_TYPE.RED, this));
                     }
                     else if (r == 1)
                     {
-                        gamemap[row].Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockgreen, cube.CUBE_TYPE.GREEN, gamemap));
+                        gamemap.Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockgreen, cube.CUBE_TYPE.GREEN, this));
                     }
                     else if (r == 2)
                     {
-                        gamemap[row].Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockblue, cube.CUBE_TYPE.BLUE, gamemap));
+                        gamemap.Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockblue, cube.CUBE_TYPE.BLUE, this));
                     }
                     else if (r == 3)
                     {
-                        gamemap[row].Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockyellow, cube.CUBE_TYPE.YELLOW, gamemap));
+                        gamemap.Add(new cube(col, row, gridstartx, gridstarty, gridwidth, canvas, blockyellow, cube.CUBE_TYPE.YELLOW, this));
                     }
                 }
                 else if (currentlevel.grid[arrindex] == "t")
                 {
-                    gamemap[row].Add(new tnt(col, row, gridstartx, gridstarty, gridwidth, canvas, tntsprite, gamemap));
+                    gamemap.Add(new tnt(col, row, gridstartx, gridstarty, gridwidth, canvas, tntsprite, this));
                 }
                 else if (currentlevel.grid[arrindex] == "bo")
                 {
-                    gamemap[row].Add(new box(col, row, gridstartx, gridstarty, gridwidth, canvas, boxsprite, gamemap));
+                    gamemap.Add(new box(col, row, gridstartx, gridstarty, gridwidth, canvas, boxsprite, this));
                     levelgoalbox++;
 
                 }
                 else if (currentlevel.grid[arrindex] == "s")
                 {
-                    gamemap[row].Add(new stone(col, row, gridstartx, gridstarty, gridwidth, canvas, stonesprite, gamemap));
+                    gamemap.Add(new stone(col, row, gridstartx, gridstarty, gridwidth, canvas, stonesprite, this));
                     levelgoalstone++;
                 }
                 else if (currentlevel.grid[arrindex] == "v")
                 {
-                    gamemap[row].Add(new vase(col, row, gridstartx, gridstarty, gridwidth, canvas, vase1sprite, gamemap));
+                    gamemap.Add(new vase(col, row, gridstartx, gridstarty, gridwidth, canvas, vase1sprite, this));
                     levelgoalvase++;
                 }
             }
@@ -503,6 +757,7 @@ public class Game : MonoBehaviour
     void Start()
     {
         loadlevel();
+        updatemap();
     }
 
     // Update is called once per frame
