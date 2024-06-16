@@ -7,6 +7,30 @@ TagManager:
   - mainmenucanvas
   - mmtext
   - mmbutton
+  - gamecanvas
+  - gridbg
+  - movecount
+  - goal1state
+  - goal1state_goal1
+  - goal1state_goal1text
+  - goal1state_goal1tick
+  - goal2state
+  - goal3state
+  - goal2state_goal1
+  - goal2state_goal2
+  - goal2state_goal1text
+  - goal2state_goal2text
+  - goal2state_goal1tick
+  - goal2state_goal2tick
+  - goal3state_goal1
+  - goal3state_goal2
+  - goal3state_goal3
+  - goal3state_goal1text
+  - goal3state_goal2text
+  - goal3state_goal3text
+  - goal3state_goal1tick
+  - goal3state_goal2tick
+  - goal3state_goal3tick
   layers:
   - Default
   - TransparentFX
