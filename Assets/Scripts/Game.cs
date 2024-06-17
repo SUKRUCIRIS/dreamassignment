@@ -7,6 +7,7 @@ using Unity.VisualScripting;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.U2D;
 using UnityEngine.UI;
@@ -124,6 +125,11 @@ public class gridobj
         CUBE
     }
     public GRID_TYPE gridtype;
+    public enum DAMAGE_TYPE
+    {
+        BLAST,
+        TNT
+    }
     public gridobj(int column, int row, float gridstartx, float gridstarty, float gridwidth, Canvas canvas, Sprite sprite, GRID_TYPE _gridtype, Game gamevars)
     {
         this.column = column;
@@ -154,6 +160,9 @@ public class gridobj
     public virtual void tap(Game gamevars)
     {
     }
+    public virtual void getdamage(Game gamevars, DAMAGE_TYPE dt)
+    {
+    }
 }
 public class obstacle : gridobj
 {
@@ -177,6 +186,29 @@ public class obstacle : gridobj
         this.tntcandamage = tntcandamage;
         this.canfall = canfall;
         this.obstacletype = _obstacletype;
+    }
+    public override void getdamage(Game gamevars, DAMAGE_TYPE dt)
+    {
+        if (dt == DAMAGE_TYPE.BLAST && this.blastcandamage)
+        {
+            this.health--;
+            if (this.health <= 0)
+            {
+                gamevars.deletegridobj(this.column, this.row);
+            }
+        }
+        else if (dt == DAMAGE_TYPE.TNT && this.tntcandamage)
+        {
+            this.health--;
+            if (this.health <= 0)
+            {
+                gamevars.deletegridobj(this.column, this.row);
+            }
+        }
+        if (this.health == 1 && obstacletype == OBSTACLE_TYPE.VASE)
+        {
+            this.gobj.ChangeSprite(gamevars.vase2sprite);
+        }
     }
 }
 public class stone : obstacle
@@ -208,7 +240,77 @@ public class tnt : gridobj
     }
     public override void tap(Game gamevars)
     {
-
+        gamevars.currmovecount--;
+        gamevars.deletegridobj(column, row);
+        List<tnt> combo = new List<tnt>();
+        combo.Add(this);
+        getcombo(combo, gamevars);
+        if (combo.Count > 1)
+        {
+            foreach (tnt t in combo)
+            {
+                //remove the one adjacent tnt that creates combo
+                if ((this.column == t.column + 1 && this.row == t.row) ||
+                    (this.column == t.column - 1 && this.row == t.row) ||
+                    (this.column == t.column && this.row == t.row + 1) ||
+                    (this.column == t.column && this.row == t.row - 1))
+                {
+                    gamevars.deletegridobj(t.column, t.row);
+                    combo.Remove(t);
+                    break;
+                }
+            }
+            explode(gamevars, 3);
+        }
+        else
+        {
+            explode(gamevars, 2);
+        }
+        gamevars.updatemovecount();
+        gamevars.updatemap();
+        gamevars.updategoals();
+        gamevars.checkwinlose();
+    }
+    private void explode(Game gamevars, int range)
+    {
+        for (int col = this.column - range; col <= this.column + range; col++)
+        {
+            for (int row = this.row - range; row <= this.row + range; row++)
+            {
+                gridobj grid = gamevars.getgridobj(col, row);
+                if (grid != null && grid != this)
+                {
+                    grid.getdamage(gamevars, DAMAGE_TYPE.TNT);
+                }
+            }
+        }
+    }
+    public override void getdamage(Game gamevars, DAMAGE_TYPE dt)
+    {
+        gamevars.deletegridobj(column, row);
+        explode(gamevars, 2);
+    }
+    private void getcombo(List<tnt> combo, Game gamevars)
+    {
+        void recursivecalculate(int searchcolumn, int searchrow)
+        {
+            gridobj xgrid = gamevars.getgridobj(searchcolumn, searchrow);
+            if (xgrid != null && xgrid.gridtype == gridobj.GRID_TYPE.TNT)
+            {
+                tnt xcube = (tnt)xgrid;
+                if (!combo.Contains(xcube))
+                {
+                    combo.Add(xcube);
+                    getcombo(combo, gamevars);
+                }
+            }
+        }
+        int currentcolumn = combo.Last().column;
+        int currentrow = combo.Last().row;
+        recursivecalculate(currentcolumn - 1, currentrow);
+        recursivecalculate(currentcolumn + 1, currentrow);
+        recursivecalculate(currentcolumn, currentrow - 1);
+        recursivecalculate(currentcolumn, currentrow + 1);
     }
 }
 public class cube : gridobj
@@ -233,20 +335,49 @@ public class cube : gridobj
         List<cube> blastcubes = new List<cube>();
         blastcubes.Add(this);
         recursivecontrol(blastcubes, gamevars);
-        if (blastcubes.Count >= 2)
+        if (blastcubes.Count() >= 2)
         {
+            blastobstacles(blastcubes, gamevars);
             gamevars.currmovecount--;
-            for (int i = 0; i < blastcubes.Count; i++)
+            for (int i = 0; i < blastcubes.Count(); i++)
             {
                 gamevars.deletegridobj(blastcubes[i].column, blastcubes[i].row);
             }
-            if (blastcubes.Count >= 5)
+            if (blastcubes.Count() >= 5)
             {
                 gamevars.addtnt(this.column, this.row);
             }
             gamevars.updatemovecount();
         }
         gamevars.updatemap();
+        gamevars.updategoals();
+        gamevars.checkwinlose();
+    }
+    private void blastobstacles(List<cube> blastcubes, Game gamevars)
+    {
+        List<obstacle> obstacles = new List<obstacle>();
+        for (int j = 0; j < gamevars.gamemap.Count(); j++)
+        {
+            if (gamevars.gamemap[j].gridtype == gridobj.GRID_TYPE.OBSTACLE)
+            {
+                obstacle obs = (obstacle)gamevars.gamemap[j];
+                for (int i = 0; i < blastcubes.Count(); i++)
+                {
+                    if ((obs.column == blastcubes[i].column + 1 && obs.row == blastcubes[i].row) ||
+                        (obs.column == blastcubes[i].column - 1 && obs.row == blastcubes[i].row) ||
+                        (obs.column == blastcubes[i].column && obs.row == blastcubes[i].row + 1) ||
+                        (obs.column == blastcubes[i].column && obs.row == blastcubes[i].row - 1))
+                    {
+                        obstacles.Add(obs);
+                        break;
+                    }
+                }
+            }
+        }
+        foreach (obstacle obs in obstacles)
+        {
+            obs.getdamage(gamevars, DAMAGE_TYPE.BLAST);
+        }
     }
     private void recursivecontrol(List<cube> blastcubes, Game gamevars)
     {
@@ -281,6 +412,10 @@ public class cube : gridobj
         }
         return null;
     }
+    public override void getdamage(Game gamevars, DAMAGE_TYPE dt)
+    {
+        gamevars.deletegridobj(this.column, this.row);
+    }
 }
 
 public class Game : MonoBehaviour
@@ -300,7 +435,205 @@ public class Game : MonoBehaviour
     public List<gameobj> goals = new List<gameobj>();
     public int levelgoalstone = 0, levelgoalvase = 0, levelgoalbox = 0, levelgoaltype = 0;
     public int currentgoalstone = 0, currentgoalvase = 0, currentgoalbox = 0;
+    GameObject goal1state, goal2state, goal3state, goal1state_goal1, goal1state_goal1text,
+        goal1state_goal1tick, goal2state_goal1, goal2state_goal1text, goal2state_goal1tick,
+        goal2state_goal2, goal2state_goal2text, goal2state_goal2tick, goal3state_goal1text,
+        goal3state_goal1tick, goal3state_goal2text, goal3state_goal2tick, goal3state_goal3text,
+        goal3state_goal3tick;
 
+    public void checkwinlose()
+    {
+        if (currmovecount <= 0 && (currentgoalstone != 0 || currentgoalvase != 0 || currentgoalbox != 0))
+        {
+            //TODO
+            SceneManager.LoadScene("mainmenu");
+        }
+        else if (currentgoalstone == 0 && currentgoalvase == 0 && currentgoalbox == 0)
+        {
+            if (PlayerPrefs.GetInt("level", 1) <= 10)
+            {
+                PlayerPrefs.SetInt("level", PlayerPrefs.GetInt("level", 1) + 1);
+                PlayerPrefs.Save();
+            }
+            SceneManager.LoadScene("mainmenu");
+        }
+    }
+    public void updategoals()
+    {
+        currentgoalstone = 0;
+        currentgoalvase = 0;
+        currentgoalbox = 0;
+        foreach (gridobj grid in gamemap)
+        {
+            if (grid.gridtype == gridobj.GRID_TYPE.OBSTACLE)
+            {
+                obstacle obs = (obstacle)grid;
+                if (obs.obstacletype == obstacle.OBSTACLE_TYPE.VASE)
+                {
+                    currentgoalvase++;
+                }
+                else if (obs.obstacletype == obstacle.OBSTACLE_TYPE.BOX)
+                {
+                    currentgoalbox++;
+                }
+                else if (obs.obstacletype == obstacle.OBSTACLE_TYPE.STONE)
+                {
+                    currentgoalstone++;
+                }
+            }
+        }
+        if (levelgoaltype == 1)
+        {
+            if (goal1state_goal1text != null && goal1state_goal1tick != null)
+            {
+                if (levelgoalbox > 0)
+                {
+                    if (currentgoalbox > 0)
+                    {
+                        goal1state_goal1text.GetComponent<TextMeshProUGUI>().text = currentgoalbox.ToString();
+                    }
+                    else
+                    {
+                        goal1state_goal1text.SetActive(false);
+
+                        goal1state_goal1tick.SetActive(true);
+                    }
+                }
+                else if (levelgoalstone > 0)
+                {
+                    if (currentgoalstone > 0)
+                    {
+                        goal1state_goal1text.GetComponent<TextMeshProUGUI>().text = currentgoalstone.ToString();
+                    }
+                    else
+                    {
+                        goal1state_goal1text.SetActive(false);
+                        goal1state_goal1tick.SetActive(true);
+                    }
+                }
+                else if (levelgoalvase > 0)
+                {
+                    if (currentgoalvase > 0)
+                    {
+                        goal1state_goal1text.GetComponent<TextMeshProUGUI>().text = currentgoalvase.ToString();
+                    }
+                    else
+                    {
+                        goal1state_goal1text.SetActive(false);
+                        goal1state_goal1tick.SetActive(true);
+                    }
+                }
+            }
+        }
+        else if (levelgoaltype == 2)
+        {
+            if (goal2state_goal1text != null && goal2state_goal1tick != null && goal2state_goal2text != null && goal2state_goal2tick != null)
+            {
+                if (levelgoalbox > 0 && levelgoalstone > 0)
+                {
+                    if (currentgoalbox > 0)
+                    {
+                        goal2state_goal1text.GetComponent<TextMeshProUGUI>().text = currentgoalbox.ToString();
+                    }
+                    else
+                    {
+                        goal2state_goal1text.SetActive(false);
+                        goal2state_goal1tick.SetActive(true);
+                    }
+                    if (currentgoalstone > 0)
+                    {
+                        goal2state_goal2text.GetComponent<TextMeshProUGUI>().text = currentgoalstone.ToString();
+                    }
+                    else
+                    {
+                        goal2state_goal2text.SetActive(false);
+                        goal2state_goal2tick.SetActive(true);
+                    }
+                }
+                else if (levelgoalbox > 0 && levelgoalvase > 0)
+                {
+                    if (currentgoalbox > 0)
+                    {
+                        goal2state_goal1text.GetComponent<TextMeshProUGUI>().text = currentgoalbox.ToString();
+                    }
+                    else
+                    {
+                        goal2state_goal1text.SetActive(false);
+                        goal2state_goal1tick.SetActive(true);
+                    }
+                    if (currentgoalvase > 0)
+                    {
+                        goal2state_goal2text.GetComponent<TextMeshProUGUI>().text = currentgoalvase.ToString();
+                    }
+                    else
+                    {
+                        goal2state_goal2text.SetActive(false);
+                        goal2state_goal2tick.SetActive(true);
+                    }
+                }
+                else if (levelgoalstone > 0 && levelgoalvase > 0)
+                {
+                    if (currentgoalstone > 0)
+                    {
+                        goal2state_goal1text.GetComponent<TextMeshProUGUI>().text = currentgoalstone.ToString();
+                    }
+                    else
+                    {
+                        goal2state_goal1text.SetActive(false);
+                        goal2state_goal1tick.SetActive(true);
+                    }
+                    if (currentgoalvase > 0)
+                    {
+                        goal2state_goal2text.GetComponent<TextMeshProUGUI>().text = currentgoalvase.ToString();
+                    }
+                    else
+                    {
+                        goal2state_goal2text.SetActive(false);
+                        goal2state_goal2tick.SetActive(true);
+                    }
+                }
+            }
+        }
+        else if (levelgoaltype == 3)
+        {
+            if (goal3state_goal1text != null && goal3state_goal1tick != null)
+            {
+                if (currentgoalvase > 0)
+                {
+                    goal3state_goal1text.GetComponent<TextMeshProUGUI>().text = currentgoalvase.ToString();
+                }
+                else
+                {
+                    goal3state_goal1text.SetActive(false);
+                    goal3state_goal1tick.SetActive(true);
+                }
+            }
+            if (goal3state_goal2text != null && goal3state_goal2tick != null)
+            {
+                if (currentgoalbox > 0)
+                {
+                    goal3state_goal2text.GetComponent<TextMeshProUGUI>().text = currentgoalbox.ToString();
+                }
+                else
+                {
+                    goal3state_goal2text.SetActive(false);
+                    goal3state_goal2tick.SetActive(true);
+                }
+            }
+            if (goal3state_goal3text != null && goal3state_goal3tick != null)
+            {
+                if (currentgoalstone > 0)
+                {
+                    goal3state_goal3text.GetComponent<TextMeshProUGUI>().text = currentgoalstone.ToString();
+                }
+                else
+                {
+                    goal3state_goal3text.SetActive(false);
+                    goal3state_goal3tick.SetActive(true);
+                }
+            }
+        }
+    }
     public bool existemptygrid()
     {
         for (int i = 0; i < emptymap.Count; i++)
@@ -317,7 +650,8 @@ public class Game : MonoBehaviour
     }
     public void updatemap()
     {
-        while (existemptygrid())
+        int maxloop = 0;
+        while (existemptygrid() && maxloop < 10)
         {
             for (int i = 0; i < gamemap.Count; i++)
             {
@@ -343,6 +677,7 @@ public class Game : MonoBehaviour
                     emptymap[0][i] = false;
                 }
             }
+            maxloop++;
         }
         List<List<cube>> tntgroups = new List<List<cube>>();
         for (int i = 0; i < gamemap.Count; i++)
@@ -515,6 +850,11 @@ public class Game : MonoBehaviour
     }
     void loadlevel()
     {
+        if (FindObjectOfType<EventSystem>() == null)
+        {
+            //create event system if there is none
+            var eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+        }
         int level = PlayerPrefs.GetInt("level", 1);
         TextAsset jsonFile;
         if (level < 10)
@@ -586,7 +926,7 @@ public class Game : MonoBehaviour
         {
             for (int col = 0; col < currentlevel.grid_width; col++)
             {
-                int arrindex = (currentlevel.grid_width * currentlevel.grid_height - 1) - (row * currentlevel.grid_width + col);
+                int arrindex = (currentlevel.grid_width * currentlevel.grid_height - 1) - (row * currentlevel.grid_width + currentlevel.grid_width - col - 1);
                 emptymap[row].Add(false);
                 if (currentlevel.grid[arrindex] == "r")
                 {
@@ -665,17 +1005,17 @@ public class Game : MonoBehaviour
             {
                 levelgoaltype++;
             }
-            GameObject goal1state = GameObject.FindWithTag("goal1state");
-            GameObject goal2state = GameObject.FindWithTag("goal2state");
-            GameObject goal3state = GameObject.FindWithTag("goal3state");
+            goal1state = GameObject.FindWithTag("goal1state");
+            goal2state = GameObject.FindWithTag("goal2state");
+            goal3state = GameObject.FindWithTag("goal3state");
             if (levelgoaltype == 1)
             {
                 goal1state.SetActive(true);
                 goal2state.SetActive(false);
                 goal3state.SetActive(false);
-                GameObject goal1state_goal1 = GameObject.FindWithTag("goal1state_goal1");
-                GameObject goal1state_goal1text = GameObject.FindWithTag("goal1state_goal1text");
-                GameObject goal1state_goal1tick = GameObject.FindWithTag("goal1state_goal1tick");
+                goal1state_goal1 = GameObject.FindWithTag("goal1state_goal1");
+                goal1state_goal1text = GameObject.FindWithTag("goal1state_goal1text");
+                goal1state_goal1tick = GameObject.FindWithTag("goal1state_goal1tick");
                 goal1state_goal1tick.SetActive(false);
 
                 if (levelgoalbox > 0)
@@ -699,13 +1039,13 @@ public class Game : MonoBehaviour
                 goal1state.SetActive(false);
                 goal2state.SetActive(true);
                 goal3state.SetActive(false);
-                GameObject goal2state_goal1 = GameObject.FindWithTag("goal2state_goal1");
-                GameObject goal2state_goal1text = GameObject.FindWithTag("goal2state_goal1text");
-                GameObject goal2state_goal1tick = GameObject.FindWithTag("goal2state_goal1tick");
+                goal2state_goal1 = GameObject.FindWithTag("goal2state_goal1");
+                goal2state_goal1text = GameObject.FindWithTag("goal2state_goal1text");
+                goal2state_goal1tick = GameObject.FindWithTag("goal2state_goal1tick");
                 goal2state_goal1tick.SetActive(false);
-                GameObject goal2state_goal2 = GameObject.FindWithTag("goal2state_goal2");
-                GameObject goal2state_goal2text = GameObject.FindWithTag("goal2state_goal2text");
-                GameObject goal2state_goal2tick = GameObject.FindWithTag("goal2state_goal2tick");
+                goal2state_goal2 = GameObject.FindWithTag("goal2state_goal2");
+                goal2state_goal2text = GameObject.FindWithTag("goal2state_goal2text");
+                goal2state_goal2tick = GameObject.FindWithTag("goal2state_goal2tick");
                 goal2state_goal2tick.SetActive(false);
 
                 if (levelgoalbox > 0 && levelgoalstone > 0)
@@ -738,16 +1078,16 @@ public class Game : MonoBehaviour
                 goal1state.SetActive(false);
                 goal2state.SetActive(false);
                 goal3state.SetActive(true);
-                GameObject goal3state_goal1text = GameObject.FindWithTag("goal3state_goal1text");
-                GameObject goal3state_goal1tick = GameObject.FindWithTag("goal3state_goal1tick");
+                goal3state_goal1text = GameObject.FindWithTag("goal3state_goal1text");
+                goal3state_goal1tick = GameObject.FindWithTag("goal3state_goal1tick");
                 goal3state_goal1tick.SetActive(false);
                 goal3state_goal1text.GetComponent<TextMeshProUGUI>().text = levelgoalvase.ToString();
-                GameObject goal3state_goal2text = GameObject.FindWithTag("goal3state_goal2text");
-                GameObject goal3state_goal2tick = GameObject.FindWithTag("goal3state_goal2tick");
+                goal3state_goal2text = GameObject.FindWithTag("goal3state_goal2text");
+                goal3state_goal2tick = GameObject.FindWithTag("goal3state_goal2tick");
                 goal3state_goal2tick.SetActive(false);
                 goal3state_goal2text.GetComponent<TextMeshProUGUI>().text = levelgoalbox.ToString();
-                GameObject goal3state_goal3text = GameObject.FindWithTag("goal3state_goal3text");
-                GameObject goal3state_goal3tick = GameObject.FindWithTag("goal3state_goal3tick");
+                goal3state_goal3text = GameObject.FindWithTag("goal3state_goal3text");
+                goal3state_goal3tick = GameObject.FindWithTag("goal3state_goal3tick");
                 goal3state_goal3tick.SetActive(false);
                 goal3state_goal3text.GetComponent<TextMeshProUGUI>().text = levelgoalstone.ToString();
             }
@@ -763,6 +1103,7 @@ public class Game : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        //dont need to calculate something every frame
+        //required calculations will be made at tap events
     }
 }

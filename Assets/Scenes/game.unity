@@ -862,74 +862,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 639341319}
   m_CullTransparentMesh: 1
---- !u!1 &715735744
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 715735747}
-  - component: {fileID: 715735746}
-  - component: {fileID: 715735745}
-  m_Layer: 0
-  m_Name: EventSystem
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &715735745
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 715735744}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f231c4fb786f3946a6b90b886c48677, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SendPointerHoverToParent: 1
-  m_HorizontalAxis: Horizontal
-  m_VerticalAxis: Vertical
-  m_SubmitButton: Submit
-  m_CancelButton: Cancel
-  m_InputActionsPerSecond: 10
-  m_RepeatDelay: 0.5
-  m_ForceModuleActive: 0
---- !u!114 &715735746
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 715735744}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76c392e42b5098c458856cdf6ecaaaa1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_FirstSelected: {fileID: 0}
-  m_sendNavigationEvents: 1
-  m_DragThreshold: 10
---- !u!4 &715735747
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 715735744}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &781172499
 GameObject:
   m_ObjectHideFlags: 0
@@ -2607,6 +2539,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45cd2e25c6e508943acdeb5c37ae1320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  gridstartx: 0
+  gridstarty: 0
+  currmovecount: 40
+  canvas: {fileID: 0}
+  tntsprite: {fileID: 0}
+  blockred: {fileID: 0}
+  blockgreen: {fileID: 0}
+  blockblue: {fileID: 0}
+  blockyellow: {fileID: 0}
+  blockredtnt: {fileID: 0}
+  blockgreentnt: {fileID: 0}
+  blockbluetnt: {fileID: 0}
+  blockyellowtnt: {fileID: 0}
+  vase1sprite: {fileID: 0}
+  vase2sprite: {fileID: 0}
+  stonesprite: {fileID: 0}
+  boxsprite: {fileID: 0}
+  levelgoalstone: 0
+  levelgoalvase: 0
+  levelgoalbox: 0
+  levelgoaltype: 0
+  currentgoalstone: 0
+  currentgoalvase: 0
+  currentgoalbox: 0
 --- !u!1 &2051539396
 GameObject:
   m_ObjectHideFlags: 0
@@ -2866,4 +2822,3 @@ SceneRoots:
   m_Roots:
   - {fileID: 147317374}
   - {fileID: 2046764233}
-  - {fileID: 715735747}

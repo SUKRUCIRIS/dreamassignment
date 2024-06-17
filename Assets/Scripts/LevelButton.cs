@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using UnityEngine.UIElements;
+using UnityEngine.EventSystems;
 
 public class LevelButton : MonoBehaviour
 {
@@ -14,13 +15,19 @@ public class LevelButton : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (FindObjectOfType<EventSystem>() == null)
+        {
+            //create event system if there is none
+            var eventSystem = new GameObject("EventSystem", typeof(EventSystem), typeof(StandaloneInputModule));
+        }
         GameObject buttonObject = GameObject.FindWithTag("mmbutton");
         UnityEngine.UI.Button myButton = buttonObject.GetComponent<UnityEngine.UI.Button>();
-        myButton.GetComponentInChildren<TextMeshProUGUI>().text="Level "+ LoadIntData().ToString();
-        if (LoadIntData() == 10)
+        myButton.GetComponentInChildren<TextMeshProUGUI>().text = "Level " + LoadIntData().ToString();
+        if (LoadIntData() > 10)
         {
             myButton.GetComponentInChildren<TextMeshProUGUI>().text = "Finished";
         }
+        myButton.onClick.RemoveAllListeners();
         myButton.onClick.AddListener(OnButtonClick);
     }
     // Update is called once per frame
@@ -38,6 +45,6 @@ public class LevelButton : MonoBehaviour
     }
     public void OnButtonClick()
     {
-        SceneManager.LoadScene("Game");
+        SceneManager.LoadScene("game");
     }
 }
