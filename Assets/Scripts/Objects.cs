@@ -47,6 +47,7 @@ public class obstacle : gridobj
             {
                 gamevars.deletegridobj(this.column, this.row);
             }
+            playparticles(gamevars);
         }
         else if (dt == DAMAGE_TYPE.TNT && this.tntcandamage)
         {
@@ -55,12 +56,12 @@ public class obstacle : gridobj
             {
                 gamevars.deletegridobj(this.column, this.row);
             }
+            playparticles(gamevars);
         }
         if (this.health == 1 && obstacletype == OBSTACLE_TYPE.VASE)
         {
             this.gobj.ChangeSprite(gamevars.vase2sprite);
         }
-        playparticles(gamevars);
     }
     public override void playparticles(Game gamevars)
     {
