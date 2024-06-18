@@ -38,7 +38,7 @@ public class Game : MonoBehaviour
     public Material particlered, particlegreen, particleblue, particleyellow, particlebox1, particlebox2, particlebox3,
         particlestone1, particlestone2, particlestone3, particlevase1, particlevase2, particlevase3, particletnt1, particletnt2;
     public GameObject baseparticles, tntparticles;
-    public GameObject winpanel, winstarcanvas;
+    public GameObject winpanel, winstarcanvas, losepanel;
     public GameObject starparticle;
     public bool won = false, lost = false;
 
@@ -47,6 +47,8 @@ public class Game : MonoBehaviour
         if (currmovecount <= 0 && (currentgoalstone != 0 || currentgoalvase != 0 || currentgoalbox != 0))
         {
             lost = true;
+            losepanel.SetActive(true);
+            losepanel.transform.SetAsLastSibling();
         }
         else if (currentgoalstone == 0 && currentgoalvase == 0 && currentgoalbox == 0)
         {
@@ -518,8 +520,10 @@ public class Game : MonoBehaviour
         winpanel = GameObject.FindWithTag("winpanel");
         winstarcanvas = GameObject.FindWithTag("winstarcanvas");
         starparticle = GameObject.FindWithTag("starparticle");
+        losepanel = GameObject.FindWithTag("losepanel");
         winpanel.SetActive(false);
         winstarcanvas.SetActive(false);
+        losepanel.SetActive(false);
 
         gridstartx = (1920 - (currentlevel.grid_width * gridwidth)) / 2.0f + gridwidth / 2.0f;
         gridstarty = 2303.333f - (2303.333f - (currentlevel.grid_height * gridwidth)) / 2.0f;
@@ -735,10 +739,6 @@ public class Game : MonoBehaviour
             {
                 SceneManager.LoadScene("mainmenu");
             }
-        }
-        else if (lost)
-        {
-            SceneManager.LoadScene("mainmenu");
         }
     }
 }

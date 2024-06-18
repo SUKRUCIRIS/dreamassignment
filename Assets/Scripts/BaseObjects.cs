@@ -45,7 +45,7 @@ public class gameobj
         image.raycastTarget = true;
 
         RectTransform rectTransform = obj.GetComponent<RectTransform>();
-        rectTransform.anchoredPosition = Vector2.zero;
+        rectTransform.anchoredPosition = Vector3.zero;
         rectTransform.sizeDelta = size;
 
         rectTransform.localScale = Vector3.one;

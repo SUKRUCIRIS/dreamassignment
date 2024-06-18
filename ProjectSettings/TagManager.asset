@@ -36,6 +36,9 @@ TagManager:
   - winstarcanvas
   - winpanel
   - starparticle
+  - losepanel
+  - trybutton
+  - closebutton
   layers:
   - Default
   - TransparentFX
@@ -43,7 +46,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - popup
   - 
   - 
   - 
