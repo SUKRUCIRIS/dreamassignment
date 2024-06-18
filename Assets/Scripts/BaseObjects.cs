@@ -163,4 +163,11 @@ public class gridobj
     public virtual void getdamage(Game gamevars, DAMAGE_TYPE dt)
     {
     }
+    public virtual void playparticles(Game gamevars)
+    {
+    }
+    public Vector2 getcenter(Game gamevars)
+    {
+        return new Vector2(gamevars.gridstartx + Game.gridwidth * column, gamevars.gridstarty - (Game.gridwidth * scaleh) * row);
+    }
 }

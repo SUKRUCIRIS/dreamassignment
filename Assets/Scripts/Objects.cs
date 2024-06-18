@@ -12,6 +12,8 @@ using UnityEngine.Scripting.APIUpdating;
 using UnityEngine.U2D;
 using UnityEngine.UI;
 using UnityEngine.UIElements;
+using static obstacle;
+using static UnityEngine.ParticleSystem;
 
 public class obstacle : gridobj
 {
@@ -58,6 +60,70 @@ public class obstacle : gridobj
         {
             this.gobj.ChangeSprite(gamevars.vase2sprite);
         }
+        playparticles(gamevars);
+    }
+    public override void playparticles(Game gamevars)
+    {
+        ParticleSystem particleSystemTemplate = gamevars.baseparticles.GetComponent<ParticleSystem>();
+        if (particleSystemTemplate == null)
+        {
+            Debug.LogError("Please ensure particle system template is assigned.");
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            ParticleSystem psInstance = GameObject.Instantiate(particleSystemTemplate,
+                new Vector3(getcenter(gamevars).x - 960, getcenter(gamevars).y - 1706.6665f, -100), Quaternion.identity);
+            psInstance.transform.SetParent(gamevars.canvas.transform, false);
+            ParticleSystemRenderer psRenderer = psInstance.GetComponent<ParticleSystemRenderer>();
+            if (i == 0)
+            {
+                if (this.obstacletype == OBSTACLE_TYPE.VASE)
+                {
+                    psRenderer.material = gamevars.particlevase1;
+                }
+                else if (this.obstacletype == OBSTACLE_TYPE.BOX)
+                {
+                    psRenderer.material = gamevars.particlebox1;
+                }
+                else if (this.obstacletype == OBSTACLE_TYPE.STONE)
+                {
+                    psRenderer.material = gamevars.particlestone1;
+                }
+            }
+            else if (i == 1)
+            {
+                if (this.obstacletype == OBSTACLE_TYPE.VASE)
+                {
+                    psRenderer.material = gamevars.particlevase2;
+                }
+                else if (this.obstacletype == OBSTACLE_TYPE.BOX)
+                {
+                    psRenderer.material = gamevars.particlebox2;
+                }
+                else if (this.obstacletype == OBSTACLE_TYPE.STONE)
+                {
+                    psRenderer.material = gamevars.particlestone2;
+                }
+            }
+            else if (i == 2)
+            {
+                if (this.obstacletype == OBSTACLE_TYPE.VASE)
+                {
+                    psRenderer.material = gamevars.particlevase3;
+                }
+                else if (this.obstacletype == OBSTACLE_TYPE.BOX)
+                {
+                    psRenderer.material = gamevars.particlebox3;
+                }
+                else if (this.obstacletype == OBSTACLE_TYPE.STONE)
+                {
+                    psRenderer.material = gamevars.particlestone3;
+                }
+            }
+            EmissionModule emissionModule = psInstance.emission;
+            emissionModule.rateOverTime = new ParticleSystem.MinMaxCurve(5);
+            psInstance.Play();
+        }
     }
 }
 public class stone : obstacle
@@ -94,6 +160,7 @@ public class tnt : gridobj
         List<tnt> combo = new List<tnt>();
         combo.Add(this);
         getcombo(combo, gamevars);
+        playparticles(gamevars);
         if (combo.Count > 1)
         {
             foreach (tnt t in combo)
@@ -138,6 +205,7 @@ public class tnt : gridobj
     {
         gamevars.deletegridobj(column, row);
         explode(gamevars, 2);
+        playparticles(gamevars);
     }
     private void getcombo(List<tnt> combo, Game gamevars)
     {
@@ -160,6 +228,32 @@ public class tnt : gridobj
         recursivecalculate(currentcolumn + 1, currentrow);
         recursivecalculate(currentcolumn, currentrow - 1);
         recursivecalculate(currentcolumn, currentrow + 1);
+    }
+    public override void playparticles(Game gamevars)
+    {
+        ParticleSystem particleSystemTemplate = gamevars.tntparticles.GetComponent<ParticleSystem>();
+        if (particleSystemTemplate == null)
+        {
+            Debug.LogError("Please ensure particle system template is assigned.");
+        }
+        for (int i = 0; i < 2; i++)
+        {
+            ParticleSystem psInstance = GameObject.Instantiate(particleSystemTemplate,
+                new Vector3(getcenter(gamevars).x - 960, getcenter(gamevars).y - 1706.6665f, -100), Quaternion.identity);
+            psInstance.transform.SetParent(gamevars.canvas.transform, false);
+            ParticleSystemRenderer psRenderer = psInstance.GetComponent<ParticleSystemRenderer>();
+            if (i == 0)
+            {
+                psRenderer.material = gamevars.particletnt1;
+            }
+            else if (i == 1)
+            {
+                psRenderer.material = gamevars.particletnt2;
+            }
+            EmissionModule emissionModule = psInstance.emission;
+            emissionModule.rateOverTime = new ParticleSystem.MinMaxCurve(100);
+            psInstance.Play();
+        }
     }
 }
 public class cube : gridobj
@@ -190,6 +284,7 @@ public class cube : gridobj
             gamevars.currmovecount--;
             for (int i = 0; i < blastcubes.Count(); i++)
             {
+                blastcubes[i].playparticles(gamevars);
                 gamevars.deletegridobj(blastcubes[i].column, blastcubes[i].row);
             }
             if (blastcubes.Count() >= 5)
@@ -264,5 +359,35 @@ public class cube : gridobj
     public override void getdamage(Game gamevars, DAMAGE_TYPE dt)
     {
         gamevars.deletegridobj(this.column, this.row);
+        playparticles(gamevars);
+    }
+    public override void playparticles(Game gamevars)
+    {
+        ParticleSystem particleSystemTemplate = gamevars.baseparticles.GetComponent<ParticleSystem>();
+        if (particleSystemTemplate == null)
+        {
+            Debug.LogError("Please ensure particle system template is assigned.");
+        }
+        ParticleSystem psInstance = GameObject.Instantiate(particleSystemTemplate,
+            new Vector3(getcenter(gamevars).x - 960, getcenter(gamevars).y - 1706.6665f, -100), Quaternion.identity);
+        psInstance.transform.SetParent(gamevars.canvas.transform, false);
+        ParticleSystemRenderer psRenderer = psInstance.GetComponent<ParticleSystemRenderer>();
+        if (this.cubetype == cube.CUBE_TYPE.BLUE)
+        {
+            psRenderer.material = gamevars.particleblue;
+        }
+        else if (this.cubetype == cube.CUBE_TYPE.RED)
+        {
+            psRenderer.material = gamevars.particlered;
+        }
+        else if (this.cubetype == cube.CUBE_TYPE.GREEN)
+        {
+            psRenderer.material = gamevars.particlegreen;
+        }
+        else if (this.cubetype == cube.CUBE_TYPE.YELLOW)
+        {
+            psRenderer.material = gamevars.particleyellow;
+        }
+        psInstance.Play();
     }
 }

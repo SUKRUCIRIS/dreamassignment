@@ -30,18 +30,23 @@ public class Game : MonoBehaviour
     public List<gameobj> goals = new List<gameobj>();
     public int levelgoalstone = 0, levelgoalvase = 0, levelgoalbox = 0, levelgoaltype = 0;
     public int currentgoalstone = 0, currentgoalvase = 0, currentgoalbox = 0;
-    GameObject goal1state, goal2state, goal3state, goal1state_goal1, goal1state_goal1text,
+    public GameObject goal1state, goal2state, goal3state, goal1state_goal1, goal1state_goal1text,
         goal1state_goal1tick, goal2state_goal1, goal2state_goal1text, goal2state_goal1tick,
         goal2state_goal2, goal2state_goal2text, goal2state_goal2tick, goal3state_goal1text,
         goal3state_goal1tick, goal3state_goal2text, goal3state_goal2tick, goal3state_goal3text,
         goal3state_goal3tick;
+    public Material particlered, particlegreen, particleblue, particleyellow, particlebox1, particlebox2, particlebox3,
+        particlestone1, particlestone2, particlestone3, particlevase1, particlevase2, particlevase3, particletnt1, particletnt2;
+    public GameObject baseparticles, tntparticles;
+    public GameObject winpanel, winstarcanvas;
+    public GameObject starparticle;
+    bool won = false, lost = false;
 
     public void checkwinlose()
     {
         if (currmovecount <= 0 && (currentgoalstone != 0 || currentgoalvase != 0 || currentgoalbox != 0))
         {
-            //TODO
-            SceneManager.LoadScene("mainmenu");
+            lost = true;
         }
         else if (currentgoalstone == 0 && currentgoalvase == 0 && currentgoalbox == 0)
         {
@@ -50,7 +55,9 @@ public class Game : MonoBehaviour
                 PlayerPrefs.SetInt("level", PlayerPrefs.GetInt("level", 1) + 1);
                 PlayerPrefs.Save();
             }
-            SceneManager.LoadScene("mainmenu");
+            won = true;
+            winpanel.SetActive(true);
+            winstarcanvas.SetActive(true);
         }
     }
     public void updategoals()
@@ -490,6 +497,30 @@ public class Game : MonoBehaviour
 
         tntsprite = loadsprite("TNT/TNT");
 
+        particleblue = Resources.Load<Material>("Cubes/Particles/bluecubep");
+        particlered = Resources.Load<Material>("Cubes/Particles/redcubep");
+        particlegreen = Resources.Load<Material>("Cubes/Particles/greencubep");
+        particleyellow = Resources.Load<Material>("Cubes/Particles/yellowcubep");
+        baseparticles = GameObject.FindWithTag("baseparticles");
+        particlebox1 = Resources.Load<Material>("Obstacles/Box/Particles/particlebox1");
+        particlebox2 = Resources.Load<Material>("Obstacles/Box/Particles/particlebox2");
+        particlebox3 = Resources.Load<Material>("Obstacles/Box/Particles/particlebox3");
+        particlestone1 = Resources.Load<Material>("Obstacles/Stone/Particles/particlestone1");
+        particlestone2 = Resources.Load<Material>("Obstacles/Stone/Particles/particlestone2");
+        particlestone3 = Resources.Load<Material>("Obstacles/Stone/Particles/particlestone3");
+        particlevase1 = Resources.Load<Material>("Obstacles/Vase/Particles/particlevase1");
+        particlevase2 = Resources.Load<Material>("Obstacles/Vase/Particles/particlevase2");
+        particlevase3 = Resources.Load<Material>("Obstacles/Vase/Particles/particlevase3");
+        tntparticles = GameObject.FindWithTag("tntparticles");
+        particletnt1 = Resources.Load<Material>("TNT/Particles/particletnt1");
+        particletnt2 = Resources.Load<Material>("TNT/Particles/particletnt2");
+
+        winpanel = GameObject.FindWithTag("winpanel");
+        winstarcanvas = GameObject.FindWithTag("winstarcanvas");
+        starparticle = GameObject.FindWithTag("starparticle");
+        winpanel.SetActive(false);
+        winstarcanvas.SetActive(false);
+
         gridstartx = (1920 - (currentlevel.grid_width * gridwidth)) / 2.0f + gridwidth / 2.0f;
         gridstarty = 2303.333f - (2303.333f - (currentlevel.grid_height * gridwidth)) / 2.0f;
 
@@ -698,7 +729,16 @@ public class Game : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //dont need to calculate something every frame
-        //required calculations will be made at tap events
+        if (won)
+        {
+            if (!starparticle.GetComponent<ParticleSystem>().isPlaying)
+            {
+                SceneManager.LoadScene("mainmenu");
+            }
+        }
+        else if (lost)
+        {
+            SceneManager.LoadScene("mainmenu");
+        }
     }
 }

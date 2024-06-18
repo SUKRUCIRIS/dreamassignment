@@ -31,6 +31,11 @@ TagManager:
   - goal3state_goal1tick
   - goal3state_goal2tick
   - goal3state_goal3tick
+  - baseparticles
+  - tntparticles
+  - winstarcanvas
+  - winpanel
+  - starparticle
   layers:
   - Default
   - TransparentFX
@@ -70,4 +75,10 @@ TagManager:
     locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: particles
+    uniqueID: 992462399
+    locked: 0
+  - name: mosttop
+    uniqueID: 4172541605
     locked: 0
