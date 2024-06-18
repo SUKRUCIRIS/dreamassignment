@@ -155,37 +155,40 @@ public class tnt : gridobj
     }
     public override void tap(Game gamevars)
     {
-        gamevars.currmovecount--;
-        gamevars.deletegridobj(column, row);
-        List<tnt> combo = new List<tnt>();
-        combo.Add(this);
-        getcombo(combo, gamevars);
-        playparticles(gamevars);
-        if (combo.Count > 1)
+        if (!gamevars.won && !gamevars.lost)
         {
-            foreach (tnt t in combo)
+            gamevars.currmovecount--;
+            gamevars.deletegridobj(column, row);
+            List<tnt> combo = new List<tnt>();
+            combo.Add(this);
+            getcombo(combo, gamevars);
+            playparticles(gamevars);
+            if (combo.Count > 1)
             {
-                //remove the one adjacent tnt that creates combo
-                if ((this.column == t.column + 1 && this.row == t.row) ||
-                    (this.column == t.column - 1 && this.row == t.row) ||
-                    (this.column == t.column && this.row == t.row + 1) ||
-                    (this.column == t.column && this.row == t.row - 1))
+                foreach (tnt t in combo)
                 {
-                    gamevars.deletegridobj(t.column, t.row);
-                    combo.Remove(t);
-                    break;
+                    //remove the one adjacent tnt that creates combo
+                    if ((this.column == t.column + 1 && this.row == t.row) ||
+                        (this.column == t.column - 1 && this.row == t.row) ||
+                        (this.column == t.column && this.row == t.row + 1) ||
+                        (this.column == t.column && this.row == t.row - 1))
+                    {
+                        gamevars.deletegridobj(t.column, t.row);
+                        combo.Remove(t);
+                        break;
+                    }
                 }
+                explode(gamevars, 3);
             }
-            explode(gamevars, 3);
+            else
+            {
+                explode(gamevars, 2);
+            }
+            gamevars.updatemovecount();
+            gamevars.updatemap();
+            gamevars.updategoals();
+            gamevars.checkwinlose();
         }
-        else
-        {
-            explode(gamevars, 2);
-        }
-        gamevars.updatemovecount();
-        gamevars.updatemap();
-        gamevars.updategoals();
-        gamevars.checkwinlose();
     }
     private void explode(Game gamevars, int range)
     {
@@ -275,27 +278,30 @@ public class cube : gridobj
     }
     public override void tap(Game gamevars)
     {
-        List<cube> blastcubes = new List<cube>();
-        blastcubes.Add(this);
-        recursivecontrol(blastcubes, gamevars);
-        if (blastcubes.Count() >= 2)
+        if (!gamevars.won && !gamevars.lost)
         {
-            blastobstacles(blastcubes, gamevars);
-            gamevars.currmovecount--;
-            for (int i = 0; i < blastcubes.Count(); i++)
+            List<cube> blastcubes = new List<cube>();
+            blastcubes.Add(this);
+            recursivecontrol(blastcubes, gamevars);
+            if (blastcubes.Count() >= 2)
             {
-                blastcubes[i].playparticles(gamevars);
-                gamevars.deletegridobj(blastcubes[i].column, blastcubes[i].row);
+                blastobstacles(blastcubes, gamevars);
+                gamevars.currmovecount--;
+                for (int i = 0; i < blastcubes.Count(); i++)
+                {
+                    blastcubes[i].playparticles(gamevars);
+                    gamevars.deletegridobj(blastcubes[i].column, blastcubes[i].row);
+                }
+                if (blastcubes.Count() >= 5)
+                {
+                    gamevars.addtnt(this.column, this.row);
+                }
+                gamevars.updatemovecount();
             }
-            if (blastcubes.Count() >= 5)
-            {
-                gamevars.addtnt(this.column, this.row);
-            }
-            gamevars.updatemovecount();
+            gamevars.updatemap();
+            gamevars.updategoals();
+            gamevars.checkwinlose();
         }
-        gamevars.updatemap();
-        gamevars.updategoals();
-        gamevars.checkwinlose();
     }
     private void blastobstacles(List<cube> blastcubes, Game gamevars)
     {

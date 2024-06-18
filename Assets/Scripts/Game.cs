@@ -40,7 +40,7 @@ public class Game : MonoBehaviour
     public GameObject baseparticles, tntparticles;
     public GameObject winpanel, winstarcanvas;
     public GameObject starparticle;
-    bool won = false, lost = false;
+    public bool won = false, lost = false;
 
     public void checkwinlose()
     {

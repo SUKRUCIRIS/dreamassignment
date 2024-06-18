@@ -504,7 +504,7 @@ ParticleSystem:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 211449470}
   serializedVersion: 8
-  lengthInSec: 5
+  lengthInSec: 1
   simulationSpeed: 1
   stopAction: 0
   cullingMode: 0
@@ -579,7 +579,7 @@ ParticleSystem:
     startLifetime:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 3
+      scalar: 5
       minScalar: 5
       maxCurve:
         serializedVersion: 2
@@ -2435,7 +2435,7 @@ ParticleSystem:
     radial:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 0
+      scalar: 1
       minScalar: 0
       maxCurve:
         serializedVersion: 2
@@ -16801,7 +16801,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -400}
+  m_AnchoredPosition: {x: 0, y: -250}
   m_SizeDelta: {x: 800, y: 800}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1624161681
@@ -17366,7 +17366,6 @@ GameObject:
   - component: {fileID: 1889594644}
   - component: {fileID: 1889594643}
   - component: {fileID: 1889594642}
-  - component: {fileID: 1889594641}
   m_Layer: 5
   m_Name: winstarcanvas
   m_TagString: winstarcanvas
@@ -17374,80 +17373,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1889594641
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1889594640}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45cd2e25c6e508943acdeb5c37ae1320, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gridstartx: 0
-  gridstarty: 0
-  currmovecount: 40
-  canvas: {fileID: 0}
-  tntsprite: {fileID: 0}
-  blockred: {fileID: 0}
-  blockgreen: {fileID: 0}
-  blockblue: {fileID: 0}
-  blockyellow: {fileID: 0}
-  blockredtnt: {fileID: 0}
-  blockgreentnt: {fileID: 0}
-  blockbluetnt: {fileID: 0}
-  blockyellowtnt: {fileID: 0}
-  vase1sprite: {fileID: 0}
-  vase2sprite: {fileID: 0}
-  stonesprite: {fileID: 0}
-  boxsprite: {fileID: 0}
-  levelgoalstone: 0
-  levelgoalvase: 0
-  levelgoalbox: 0
-  levelgoaltype: 0
-  currentgoalstone: 0
-  currentgoalvase: 0
-  currentgoalbox: 0
-  goal1state: {fileID: 0}
-  goal2state: {fileID: 0}
-  goal3state: {fileID: 0}
-  goal1state_goal1: {fileID: 0}
-  goal1state_goal1text: {fileID: 0}
-  goal1state_goal1tick: {fileID: 0}
-  goal2state_goal1: {fileID: 0}
-  goal2state_goal1text: {fileID: 0}
-  goal2state_goal1tick: {fileID: 0}
-  goal2state_goal2: {fileID: 0}
-  goal2state_goal2text: {fileID: 0}
-  goal2state_goal2tick: {fileID: 0}
-  goal3state_goal1text: {fileID: 0}
-  goal3state_goal1tick: {fileID: 0}
-  goal3state_goal2text: {fileID: 0}
-  goal3state_goal2tick: {fileID: 0}
-  goal3state_goal3text: {fileID: 0}
-  goal3state_goal3tick: {fileID: 0}
-  particlered: {fileID: 0}
-  particlegreen: {fileID: 0}
-  particleblue: {fileID: 0}
-  particleyellow: {fileID: 0}
-  particlebox1: {fileID: 0}
-  particlebox2: {fileID: 0}
-  particlebox3: {fileID: 0}
-  particlestone1: {fileID: 0}
-  particlestone2: {fileID: 0}
-  particlestone3: {fileID: 0}
-  particlevase1: {fileID: 0}
-  particlevase2: {fileID: 0}
-  particlevase3: {fileID: 0}
-  particletnt1: {fileID: 0}
-  particletnt2: {fileID: 0}
-  baseparticles: {fileID: 0}
-  tntparticles: {fileID: 0}
-  winpanel: {fileID: 0}
-  winstarcanvas: {fileID: 0}
-  starparticle: {fileID: 0}
 --- !u!114 &1889594642
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17795,6 +17720,8 @@ MonoBehaviour:
   winpanel: {fileID: 0}
   winstarcanvas: {fileID: 0}
   starparticle: {fileID: 0}
+  won: 0
+  lost: 0
 --- !u!1 &2051539396
 GameObject:
   m_ObjectHideFlags: 0
